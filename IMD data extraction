@@ -1,0 +1,28 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+pip install imdlib
+
+import imdlib as imd
+import xarray as xr
+import os
+path = "/content/drive/MyDrive/Colab Notebooks"
+start_yr = 1901
+end_yr = 2023
+variable = 'pcp' 
+imd.get_data(variable, start_yr, end_yr, fn_format='yearwise', file_dir=path)
+for year in range(start_yr, end_yr+1):
+    data = imd.open_data(variable, year, year, 'yearwise', path)
+    ds = data.get_xarray()
+    print(ds)
+    latLong = [[27.25,78.00],[27.0,78.0],[27.0,78.25],[27.0,77.75],[27.5,78.5]]
+    for points in latLong:
+        lat = points[0]
+        lon = points[1]
+        df = ds.sel(lat=lat, lon=lon, method='nearest').to_dataframe()
+        filename = f'{path}/{variable}_{year}_{lat}_{lon}.csv'
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+        df.to_csv(filename)
+        print(f'{year} {variable} data saved to {filename}')
+
